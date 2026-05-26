@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Arduino UNO Board</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: transparent;
+  }
+
+  .board-outer {
+    position: relative;
+    width: 820px;
+    height: 580px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .board-inner {
+    position: relative;
+    width: 780px;
+    height: 540px;
+  }
+
+  /* ── PCB SVG background ── */
+  .pcb-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(0 12px 24px rgba(0,0,0,0.4));
+  }
+
+  /* ── Silkscreen labels ── */
+  .silk-line-digital {
+    position: absolute;
+    left: 310px; top: 93px;
+    width: 266px; height: 2px;
+    background: white; opacity: .85;
+  }
+  .silk-label-digital {
+    position: absolute;
+    left: 310px; top: 99px;
+    width: 266px;
+    text-align: center;
+    color: white;
+    font-family: sans-serif;
+    font-weight: 900;
+    font-size: 10.5px;
+    letter-spacing: .1em;
+    opacity: .85;
+    text-transform: uppercase;
+    user-select: none;
+  }
+  .silk-line-power {
+    position: absolute;
+    left: 324px; top: 446px;
+    height: 2px; width: 124px;
+    background: white; opacity: .85;
+  }
+  .silk-label-power {
+    position: absolute;
+    left: 324px; top: 428px;
+    width: 124px;
+    text-align: right;
+    color: white;
+    font-family: sans-serif;
+    font-weight: 900;
+    font-size: 10.5px;
+    letter-spacing: .05em;
+    opacity: .85;
+    text-transform: uppercase;
+    user-select: none;
+  }
+  .silk-line-analog {
+    position: absolute;
+    left: 460px; top: 446px;
+    height: 2px; width: 116px;
+    background: white; opacity: .85;
+  }
+  .silk-label-analog {
+    position: absolute;
+    left: 460px; top: 428px;
+    width: 116px;
+    text-align: center;
+    color: white;
+    font-family: sans-serif;
+    font-weight: 900;
+    font-size: 11px;
+    letter-spacing: .05em;
+    opacity: .85;
+    text-transform: uppercase;
+    user-select: none;
+  }
+
+  /* ── Arduino logo + brand ── */
+  .brand-wrap {
+    position: absolute;
+    left: 346px; top: 146px;
+    width: 130px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    user-select: none;
+  }
+  .brand-svg { transform: scale(.85); transform-origin: center; }
+  .brand-text {
+    font-family: sans-serif;
+    font-weight: 900;
+    color: white;
+    letter-spacing: .14em;
+    text-align: center;
+    font-size: 22px;
+    text-transform: uppercase;
+    line-height: 1;
+    margin-top: 4px;
+  }
+
+  /* ── UNO badge ── */
+  .uno-badge {
+    position: absolute;
+    left: 522px; top: 146px;
+    width: 138px; height: 56px;
+    border: 2.5px dotted rgba(255,255,255,.95);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+  }
+  .uno-text {
+    color: white;
+    font-family: sans-serif;
+    font-weight: 900;
+    font-size: 32px;
+    letter-spacing: .06em;
+    line-height: 1;
+  }
+
+  /* ── LED silk labels ── */
+  .led-label-L {
+    position: absolute;
+    left: 284px; top: 141px;
+    color: white;
+    font-family: sans-serif;
+    font-weight: 900;
+    font-size: 10.5px;
+    opacity: .85;
+    user-select: none;
+  }
+  .led-label-txrx {
+    position: absolute;
+    left: 272px; top: 198px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    text-align: right;
+    color: white;
+    font-family: sans-serif;
+    font-weight: 900;
+    font-size: 10.5px;
+    opacity: .85;
+    user-select: none;
+    width: 25px;
+  }
+  .led-label-ON {
+    position: absolute;
+    left: 704px; top: 143px;
+    color: white;
+    font-family: sans-serif;
+    font-weight: 900;
+    font-size: 10px;
+    opacity: .85;
+    user-select: none;
+  }
+
+  /* ── Mounting holes ── */
+  .mount-hole {
+    position: absolute;
+    border-radius: 50%;
+    background: #e5e7eb;
+    border: 5px solid #a1a1a1;
+    box-shadow: inset 0 0 4px rgba(0,0,0,.3);
+  }
+  .mh-tl  { left: 188px; top: 22px;  width: 24px; height: 24px; border-width: 4px; }
+  .mh-bl  { left: 132px; top: 483px; width: 32px; height: 32px; z-index: 20; }
+  .mh-rm  { left: 685px; top: 192px; width: 32px; height: 32px; }
+  .mh-br  { left: 685px; top: 442px; width: 32px; height: 32px; }
+
+  /* ── USB Type-B connector ── */
+  .usb-connector {
+    position: absolute;
+    left: -14px; top: 152px;
+    width: 172px; height: 148px;
+    background: linear-gradient(to right, #d1d5db, #f3f4f6, #9ca3af);
+    border: 1px solid #6b7280;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 4px;
+    box-shadow: 5px 5px 15px rgba(0,0,0,.5);
+    z-index: 10;
+  }
+  .usb-inner {
+    width: 100%; height: 100%;
+    border: 2px solid #9ca3af;
+    border-bottom-width: 5px;
+    background: linear-gradient(to bottom, #e5e7eb, #d1d5db);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    position: relative;
+    padding-right: 8px;
+  }
+  .usb-groove {
+    width: 10px; height: 100px;
+    background: #6b7280;
+    border-radius: 9999px;
+    margin-right: 8px;
+    opacity: .8;
+  }
+  .usb-plastic {
+    position: absolute;
+    left: 24px; top: 24px;
+    width: 80px; height: 80px;
+    background: #171717;
+    border-radius: 6px;
+    border: 2px solid #4b5563;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .usb-pins { display: flex; gap: 4px; }
+  .usb-pin {
+    width: 4px; height: 35px;
+    background: #d97706;
+    border-radius: 2px;
+  }
+
+  /* ── Barrel jack ── */
+  .barrel-jack {
+    position: absolute;
+    left: -14px; top: 418px;
+    width: 128px; height: 72px;
+    background: linear-gradient(to bottom, #262626, #0a0a0a);
+    border-radius: 8px;
+    border-right: 3px solid #404040;
+    box-shadow: 5px 10px 20px rgba(0,0,0,.6);
+    z-index: 10;
+  }
+  .barrel-hole {
+    position: absolute;
+    left: 0; top: 12px;
+    height: 46px; width: 25px;
+    background: black;
+    border-radius: 0 8px 8px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #404040;
+    border-left: none;
+  }
+  .barrel-pin {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: #92400e;
+    box-shadow: inset 0 1px 3px black;
+  }
+  .barrel-seam-top {
+    position: absolute;
+    top: 0; right: 12px;
+    width: 45px; height: 10px;
+    background: #171717;
+    border-left: 1px solid #404040;
+  }
+  .barrel-seam-bottom {
+    position: absolute;
+    bottom: 0; right: 12px;
+    width: 45px; height: 10px;
+    background: #171717;
+    border-left: 1px solid #333;
+  }
+
+  /* ── Reset button ── */
+  .reset-wrap {
+    position: absolute;
+    left: 38px; top: 48px;
+    width: 88px; height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .reset-bracket {
+    position: absolute;
+    width: 8px; height: 15px;
+    background: #9ca3af;
+    border: 1px solid #6b7280;
+  }
+  .rb-tl { top: 8px;  left: -4px;  border-radius: 4px 0 0 4px; border-right: none; }
+  .rb-bl { bottom: 8px; left: -4px; border-radius: 4px 0 0 4px; border-right: none; }
+  .rb-tr { top: 8px;  right: -4px; border-radius: 0 4px 4px 0; border-left: none; }
+  .rb-br { bottom: 8px; right: -4px; border-radius: 0 4px 4px 0; border-left: none; }
+  .reset-housing {
+    width: 66px; height: 66px;
+    background: linear-gradient(135deg, #e5e7eb, #9ca3af);
+    border: 2px solid #6b7280;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,.4);
+  }
+  .reset-collar {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: #d1d5db;
+    border: 2px solid #9ca3af;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: inset 0 1px 4px rgba(0,0,0,.2);
+  }
+  .reset-plunger {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #ef4444, #b91c1c);
+    box-shadow: 0 2px 6px rgba(0,0,0,.4);
+    border: 1px solid #991b1b;
+  }
+
+  /* ── Crystal oscillator ── */
+  .crystal {
+    position: absolute;
+    left: 44px; top: 322px;
+    width: 35px; height: 65px;
+    background: linear-gradient(to bottom, #d1d5db, #f3f4f6, #9ca3af);
+    border: 1px solid #6b7280;
+    border-radius: 9999px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 8px rgba(0,0,0,.3);
+  }
+  .crystal-body {
+    width: 28px; height: 55px;
+    border: 2px solid #d1d5db;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-family: monospace;
+    color: #374151;
+    font-weight: 700;
+    letter-spacing: -.05em;
+  }
+  .crystal-body span { transform: rotate(90deg); white-space: nowrap; font-size: 9px; }
+  .crystal-anchor {
+    position: absolute;
+    width: 10px; height: 3px;
+    background: #6b7280;
+    border-radius: 9999px;
+    opacity: .65;
+  }
+  .ca-top    { top: 1px; }
+  .ca-bottom { bottom: 1px; }
+
+  /* ── Voltage regulator (big) ── */
+  .vreg-big {
+    position: absolute;
+    left: 138px; top: 365px;
+    width: 32px; height: 45px;
+    background: linear-gradient(to bottom, #262626, #171717);
+    border: 1px solid #404040;
+    border-radius: 2px;
+    box-shadow: 0 4px 8px rgba(0,0,0,.4);
+    display: flex;
+    justify-content: space-around;
+    padding: 4px 4px 0;
+    position: absolute;
+  }
+  .vreg-big-tab {
+    position: absolute;
+    left: 3px; top: -14px;
+    width: 26px; height: 15px;
+    background: linear-gradient(to bottom, #9ca3af, #6b7280);
+    border-radius: 2px 2px 0 0;
+    border: 1px solid #4b5563;
+    border-bottom: none;
+  }
+  .vreg-leg {
+    width: 3px; height: 25px;
+    background: #9ca3af;
+    border-radius: 0 0 2px 2px;
+    margin-top: 35px;
+  }
+  /* ── Voltage regulator (small) ── */
+  .vreg-small {
+    position: absolute;
+    left: 145px; top: 95px;
+    width: 18px; height: 22px;
+    background: #171717;
+    border: 1px solid #404040;
+    border-radius: 2px;
+    display: flex;
+    justify-content: space-between;
+    padding: 2px;
+  }
+  .vreg-small-leg {
+    width: 2px; height: 8px;
+    background: #9ca3af;
+    margin-top: 16px;
+  }
+
+  /* ── Barrel caps ── */
+  .cap {
+    position: absolute;
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: linear-gradient(to bottom, #9ca3af, #f3f4f6, #9ca3af);
+    border: 1px solid #6b7280;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,.3);
+  }
+  .cap-1 { left: 135px; top: 292px; }
+  .cap-2 { left: 135px; top: 324px; }
+  .cap-inner {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: #404040;
+    border: 1px solid #4b5563;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .cap-stripe-dark { flex: 1; background: #0a0a0a; }
+  .cap-stripe-mid  { flex: 1; background: #525252; }
+
+  /* ── On-board LEDs ── */
+  .led-housing {
+    width: 18px; height: 14px;
+    background: #171717;
+    border-radius: 3px;
+    border: 1.5px solid #525252;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,.5);
+  }
+  .led-dot {
+    width: 13px; height: 9px;
+    border-radius: 2px;
+  }
+
+  /* L LED (pin 13) – amber, lit */
+  .led-L-wrap {
+    position: absolute;
+    left: 331px; top: 141px;
+    z-index: 25;
+  }
+  .led-dot-L {
+    background: #fbbf24;
+    box-shadow: 0 0 16px 5px rgba(251,191,36,.95);
+  }
+
+  /* TX LED – yellow, lit */
+  .led-TX-wrap {
+    position: absolute;
+    left: 331px; top: 200px;
+    z-index: 25;
+  }
+  .led-dot-TX {
+    background: #facc15;
+    box-shadow: 0 0 14px 4px rgba(250,204,21,.95);
+  }
+
+  /* RX LED – off */
+  .led-RX-wrap {
+    position: absolute;
+    left: 331px; top: 228px;
+    z-index: 25;
+  }
+  .led-dot-RX { background: #171717; }
+
+  /* ON LED – green, lit */
+  .led-ON-wrap {
+    position: absolute;
+    left: 681px; top: 141px;
+    z-index: 25;
+  }
+  .led-dot-ON {
+    background: #22c55e;
+    box-shadow: 0 0 16px 5px rgba(34,197,94,.95);
+  }
+
+  /* ── ATmega328P chip ── */
+  .atmega {
+    position: absolute;
+    left: 334px; top: 328px;
+    width: 358px; height: 82px;
+    background: linear-gradient(to bottom, #262626, #171717, #0a0a0a);
+    border-radius: 6px;
+    border: 2px solid #404040;
+    box-shadow: 2px 12px 24px rgba(0,0,0,.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    z-index: 10;
+  }
+  .atmega-notch {
+    position: absolute;
+    left: 0;
+    width: 10px; height: 28px;
+    background: #1d70b8;
+    border-radius: 0 9999px 9999px 0;
+    border: 2px solid #404040;
+    border-left: none;
+  }
+  .atmega-pin1dot {
+    position: absolute;
+    left: 16px; bottom: 8px;
+    width: 11px; height: 11px;
+    border-radius: 50%;
+    background: #0a0a0a;
+    border: 1px solid #404040;
+    box-shadow: inset 0 1px 2px black;
+  }
+  .atmega-legs-top,
+  .atmega-legs-bottom {
+    position: absolute;
+    left: 12px; right: 12px;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 8px;
+    pointer-events: none;
+  }
+  .atmega-legs-top    { top: -14px; }
+  .atmega-legs-bottom { bottom: -14px; }
+  .atmega-leg {
+    width: 6px; height: 16px;
+    background: linear-gradient(to right, #9ca3af, #d1d5db);
+    border: .5px solid #4b5563;
+    border-radius: 2px 2px 0 0;
+  }
+  .atmega-legs-bottom .atmega-leg { border-radius: 0 0 2px 2px; }
+  .atmega-dimple {
+    position: absolute;
+    top: 32px;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: #0a0a0a;
+    border: 1px solid #1a1a1a;
+    box-shadow: inset 0 1.5px 3px black;
+    opacity: .9;
+  }
+  .atmega-dimple-l { left: 34px; }
+  .atmega-dimple-r { right: 34px; }
+
+  /* ── Pin header blocks ── */
+  .pin-header {
+    position: absolute;
+    height: 28px;
+    background: linear-gradient(to bottom, #1a1a1a, #0a0a0a);
+    border-radius: 3px;
+    border: 1px solid #404040;
+    box-shadow: 0 2px 6px rgba(0,0,0,.4);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 4px;
+    z-index: 10;
+  }
+  .pin-header-digi-l { left: 225px; top: 26px; width: 190px; }
+  .pin-header-digi-r { left: 424px; top: 26px; width: 152px; }
+  .pin-header-pwr    { left: 296px; top: 486px; width: 152px; }
+  .pin-header-analog { left: 460px; top: 486px; width: 116px; }
+
+  .pin-socket {
+    position: relative;
+    width: 18px; height: 18px;
+    background: #0a0a0a;
+    border: 1.5px solid #404040;
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .pin-hole {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #1a1a1a;
+  }
+  /* pins with voltage indicator colours */
+  .pin-hole-off    { background: #1a1a1a; }
+  .pin-hole-high   { background: #ef4444; box-shadow: 0 0 10px #ef4444; }
+  .pin-hole-pwm    { background: #fbbf24; box-shadow: 0 0 8px #fbbf24; }
+  .pin-hole-analog { background: #fbbf24; box-shadow: 0 0 8px #fbbf24; }
+
+  /* Rotated pin labels */
+  .pin-label {
+    position: absolute;
+    left: 50%;
+    transform-origin: center;
+    transform: translateX(-50%) rotate(-90deg);
+    white-space: nowrap;
+    font-family: sans-serif;
+    font-weight: 900;
+    font-size: 11px;
+    color: white;
+    opacity: .85;
+    user-select: none;
+    pointer-events: none;
+  }
+  /* Labels below (top headers) */
+  .pin-label-below { top: 35px; }
+  /* Labels above (bottom headers) */
+  .pin-label-above { top: -24px; }
+</style>
+</head>
+<body>
+
+<div class="board-outer">
+  <div class="board-inner">
+
+    <!-- PCB SVG Background -->
+    <svg class="pcb-svg" viewBox="0 0 780 540" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M 12,0 L 715,0 L 765,50 L 765,490 L 745,510 L 745,540 L 160,540
+               Q 150,540 145,530 L 135,515 Q 125,505 110,505 L 12,505
+               Q 0,505 0,493 L 0,12 Q 0,0 12,0 Z" fill="#1d70b8"/>
+
+      <!-- Copper traces – blue -->
+      <path d="M 50 100 L 120 100 L 150 130 L 150 200" stroke="#16568c" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.6"/>
+      <path d="M 280 150 L 320 150 L 350 120 L 400 120" stroke="#16568c" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.6"/>
+      <path d="M 450 320 L 520 320 L 580 380 L 580 430" stroke="#16568c" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.5"/>
+      <path d="M 200 480 L 250 480 L 280 450 L 320 450" stroke="#16568c" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.6"/>
+      <path d="M 680 250 L 710 250 L 730 270 L 730 350" stroke="#16568c" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.6"/>
+
+      <!-- Gold traces -->
+      <path d="M 150 250 L 220 250 L 240 270 L 240 330" stroke="#cca43b" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.4"/>
+      <path d="M 310 180 L 350 180 L 380 210 L 420 210" stroke="#cca43b" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.4"/>
+      <path d="M 460 480 L 510 480 L 530 500" stroke="#cca43b" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.4"/>
+
+      <!-- Gold vias -->
+      <circle cx="210" cy="110" r="3" fill="#cca43b" stroke="#333" stroke-width="0.5" opacity="0.8"/>
+      <circle cx="210" cy="125" r="3" fill="#cca43b" stroke="#333" stroke-width="0.5" opacity="0.8"/>
+      <circle cx="210" cy="140" r="3" fill="#cca43b" stroke="#333" stroke-width="0.5" opacity="0.8"/>
+      <circle cx="225" cy="110" r="3" fill="#cca43b" stroke="#333" stroke-width="0.5" opacity="0.8"/>
+      <circle cx="225" cy="125" r="3" fill="#cca43b" stroke="#333" stroke-width="0.5" opacity="0.8"/>
+      <circle cx="225" cy="140" r="3" fill="#cca43b" stroke="#333" stroke-width="0.5" opacity="0.8"/>
+      <circle cx="240" cy="110" r="3" fill="#cca43b" stroke="#333" stroke-width="0.5" opacity="0.8"/>
+      <circle cx="240" cy="125" r="3" fill="#cca43b" stroke="#333" stroke-width="0.5" opacity="0.8"/>
+      <circle cx="240" cy="140" r="3" fill="#cca43b" stroke="#333" stroke-width="0.5" opacity="0.8"/>
+
+      <!-- Silver vias -->
+      <circle cx="682" cy="300" r="3.5" fill="#a1a1a1" stroke="#333" stroke-width="0.5"/>
+      <circle cx="682" cy="315" r="3.5" fill="#a1a1a1" stroke="#333" stroke-width="0.5"/>
+      <circle cx="682" cy="330" r="3.5" fill="#a1a1a1" stroke="#333" stroke-width="0.5"/>
+      <circle cx="697" cy="300" r="3.5" fill="#a1a1a1" stroke="#333" stroke-width="0.5"/>
+      <circle cx="697" cy="315" r="3.5" fill="#a1a1a1" stroke="#333" stroke-width="0.5"/>
+      <circle cx="697" cy="330" r="3.5" fill="#a1a1a1" stroke="#333" stroke-width="0.5"/>
+
+      <!-- Small gold dots -->
+      <circle cx="48"  cy="310" r="2.5" fill="#cca43b" opacity="0.6"/>
+      <circle cx="180" cy="460" r="2.5" fill="#cca43b" opacity="0.6"/>
+      <circle cx="280" cy="390" r="2.5" fill="#cca43b" opacity="0.6"/>
+      <circle cx="340" cy="310" r="2.5" fill="#cca43b" opacity="0.6"/>
+      <circle cx="600" cy="110" r="2.5" fill="#cca43b" opacity="0.6"/>
+      <circle cx="700" cy="80"  r="2.5" fill="#cca43b" opacity="0.6"/>
+    </svg>
+
+    <!-- Silkscreen labels -->
+    <div class="silk-line-digital"></div>
+    <div class="silk-label-digital">DIGITAL (PWM ~)</div>
+    <div class="silk-line-power"></div>
+    <div class="silk-label-power">POWER</div>
+    <div class="silk-line-analog"></div>
+    <div class="silk-label-analog">ANALOG IN</div>
+
+    <!-- Arduino brand -->
+    <div class="brand-wrap">
+      <svg class="brand-svg" width="128" height="54" viewBox="0 0 128 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="36" cy="32" r="25" stroke="white" stroke-width="8" fill="none"/>
+        <rect x="24" y="28" width="24" height="8" fill="white" rx="1"/>
+        <circle cx="86" cy="32" r="25" stroke="white" stroke-width="8" fill="none"/>
+        <rect x="74" y="28" width="24" height="8" fill="white" rx="1"/>
+        <rect x="82" y="20" width="8"  height="24" fill="white" rx="1"/>
+      </svg>
+      <div class="brand-text">ARDUINO</div>
+    </div>
+
+    <!-- UNO badge -->
+    <div class="uno-badge"><span class="uno-text">UNO</span></div>
+
+    <!-- LED silk labels -->
+    <div class="led-label-L">L</div>
+    <div class="led-label-txrx"><span>TX</span><span>RX</span></div>
+    <div class="led-label-ON">ON</div>
+
+    <!-- Mounting holes -->
+    <div class="mount-hole mh-tl"></div>
+    <div class="mount-hole mh-bl"></div>
+    <div class="mount-hole mh-rm"></div>
+    <div class="mount-hole mh-br"></div>
+
+    <!-- USB Type-B connector -->
+    <div class="usb-connector">
+      <div class="usb-inner">
+        <div class="usb-groove"></div>
+        <div class="usb-plastic">
+          <div class="usb-pins">
+            <div class="usb-pin"></div>
+            <div class="usb-pin"></div>
+            <div class="usb-pin"></div>
+            <div class="usb-pin"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Barrel power jack -->
+    <div class="barrel-jack">
+      <div class="barrel-hole"><div class="barrel-pin"></div></div>
+      <div class="barrel-seam-top"></div>
+      <div class="barrel-seam-bottom"></div>
+    </div>
+
+    <!-- Reset button -->
+    <div class="reset-wrap">
+      <div class="reset-bracket rb-tl"></div>
+      <div class="reset-bracket rb-bl"></div>
+      <div class="reset-bracket rb-tr"></div>
+      <div class="reset-bracket rb-br"></div>
+      <div class="reset-housing">
+        <div class="reset-collar">
+          <div class="reset-plunger"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Crystal oscillator -->
+    <div class="crystal">
+      <div class="crystal-anchor ca-top"></div>
+      <div class="crystal-body"><span>16.000</span></div>
+      <div class="crystal-anchor ca-bottom"></div>
+    </div>
+
+    <!-- Voltage regulator (big) -->
+    <div style="position:absolute;left:138px;top:365px;width:32px;height:45px;background:linear-gradient(to bottom,#262626,#171717);border:1px solid #404040;border-radius:2px;box-shadow:0 4px 8px rgba(0,0,0,.4);display:flex;justify-content:space-around;padding:4px 4px 0;z-index:1">
+      <div style="position:absolute;left:3px;top:-14px;width:26px;height:15px;background:linear-gradient(to bottom,#9ca3af,#6b7280);border-radius:2px 2px 0 0;border:1px solid #4b5563;border-bottom:none"></div>
+      <div style="width:3px;height:25px;background:#9ca3af;border-radius:0 0 2px 2px;margin-top:35px"></div>
+      <div style="width:3px;height:25px;background:#9ca3af;border-radius:0 0 2px 2px;margin-top:35px"></div>
+      <div style="width:3px;height:25px;background:#9ca3af;border-radius:0 0 2px 2px;margin-top:35px"></div>
+    </div>
+
+    <!-- Voltage regulator (small) -->
+    <div style="position:absolute;left:145px;top:95px;width:18px;height:22px;background:#171717;border:1px solid #404040;border-radius:2px;display:flex;justify-content:space-between;padding:2px">
+      <div style="width:2px;height:8px;background:#9ca3af;margin-top:16px"></div>
+      <div style="width:2px;height:8px;background:#9ca3af;margin-top:16px"></div>
+      <div style="width:2px;height:8px;background:#9ca3af;margin-top:16px"></div>
+    </div>
+
+    <!-- Barrel capacitors -->
+    <div class="cap cap-1"><div class="cap-inner"><div class="cap-stripe-dark"></div><div class="cap-stripe-mid"></div></div></div>
+    <div class="cap cap-2"><div class="cap-inner"><div class="cap-stripe-dark"></div><div class="cap-stripe-mid"></div></div></div>
+
+    <!-- LED: L (pin 13, amber/lit) -->
+    <div class="led-L-wrap">
+      <div class="led-housing"><div class="led-dot led-dot-L"></div></div>
+    </div>
+
+    <!-- LED: TX (yellow/lit) -->
+    <div class="led-TX-wrap">
+      <div class="led-housing"><div class="led-dot led-dot-TX"></div></div>
+    </div>
+
+    <!-- LED: RX (off) -->
+    <div class="led-RX-wrap">
+      <div class="led-housing"><div class="led-dot led-dot-RX"></div></div>
+    </div>
+
+    <!-- LED: ON (green/lit) -->
+    <div class="led-ON-wrap">
+      <div class="led-housing"><div class="led-dot led-dot-ON"></div></div>
+    </div>
+
+    <!-- ATmega328P -->
+    <div class="atmega">
+      <div class="atmega-notch"></div>
+      <div class="atmega-pin1dot"></div>
+      <div class="atmega-legs-top">
+        <div class="atmega-leg"></div><div class="atmega-leg"></div><div class="atmega-leg"></div><div class="atmega-leg"></div>
+        <div class="atmega-leg"></div><div class="atmega-leg"></div><div class="atmega-leg"></div><div class="atmega-leg"></div>
+        <div class="atmega-leg"></div><div class="atmega-leg"></div><div class="atmega-leg"></div><div class="atmega-leg"></div>
+        <div class="atmega-leg"></div><div class="atmega-leg"></div>
+      </div>
+      <div class="atmega-legs-bottom">
+        <div class="atmega-leg"></div><div class="atmega-leg"></div><div class="atmega-leg"></div><div class="atmega-leg"></div>
+        <div class="atmega-leg"></div><div class="atmega-leg"></div><div class="atmega-leg"></div><div class="atmega-leg"></div>
+        <div class="atmega-leg"></div><div class="atmega-leg"></div><div class="atmega-leg"></div><div class="atmega-leg"></div>
+        <div class="atmega-leg"></div><div class="atmega-leg"></div>
+      </div>
+      <div class="atmega-dimple atmega-dimple-l"></div>
+      <div class="atmega-dimple atmega-dimple-r"></div>
+    </div>
+
+    <!-- Digital pin header LEFT (10 pins: AREF GND 13 12 ~11 ~10 ~9 8 7 6) -->
+    <div class="pin-header pin-header-digi-l">
+      <!-- AREF -->
+      <div class="pin-socket"><div class="pin-hole pin-hole-off"></div><div class="pin-label pin-label-below">AREF</div></div>
+      <!-- GND -->
+      <div class="pin-socket"><div class="pin-hole pin-hole-off"></div><div class="pin-label pin-label-below">GND</div></div>
+      <!-- 13 -->
+      <div class="pin-socket"><div class="pin-hole pin-hole-high"></div><div class="pin-label pin-label-below">13</div></div>
+      <!-- 12 -->
+      <div class="pin-socket"><div class="pin-hole pin-hole-off"></div><div class="pin-label pin-label-below">12</div></div>
+      <!-- ~11 -->
+      <div class="pin-socket"><div class="pin-hole pin-hole-off"></div><div class="pin-label pin-label-below">~11</div></div>
+      <!-- ~10 -->
+      <div class="pin-socket"><div class="pin-hole pin-hole-off"></div><div class="pin-label pin-label-below">~10</div></div>
+      <!-- ~9 -->
+      <div class="pin-socket"><div class="pin-hole pin-hole-off"></div><div class="pin-label pin-label-below">~9</div></div>
+      <!-- 8 -->
+      <div class="pin-socket"><div class="pin-hole pin-hole-off"></div><div class="pin-label pin-label-below">8</div></div>
+      <!-- 7 -->
+      <div class="pin-socket"><div class="pin-hole pin-hole-off"></div><div class="pin-label pin-label-below">7</div></div>
+      <!-- 6 -->
+      <div class="pin-socket"><div class="pin-hole pin-hole-off"></div><div class="pin-label pin-label-below">6</div></div>
+    </div>
+
+    <!-- Digital pin header RIGHT (8 pins: ~5 4 ~3 2 TX→1 RX←0) -->
+    <div class="pin-header pin-header-digi-r">
+      <div class="pin-socket"><div class="pin-hole pin-hole-off"></div><div class="pin-label pin-label-below">~5</div></div>
+      <div class="pin-socket"><div class="pin-hole pin-hole-off"></div><div class="pin-label pin-label-below">4</div></div>
+      <div class="pin-socket"><div class="pin-hole pin-hole-off"></div><div class="pin-label pin-label-below">~3</div></div>
+      <div class="pin-socket"><div class="pin-hole pin-hole-off"></div><div class="pin-label pin-label-below">2</div></div>
+      <div class="pin-socket"><div class="pin-hole pin-hole-pwm"></div><div class="pin-label pin-label-below">TX→1</div></div>
+      <div class="pin-socket"><div class="pin-hole pin-hole-off"></div><div class="pin-label pin-label-below">RX←0</div></div>
+    </div>
+
+    <!-- Power header (8 pins: IOREF RESET 3.3V 5V GND GND Vin) -->
+    <div class="pin-header pin-header-pwr">
+      <div class="pin-socket"><div class="pin-hole pin-hole-off"></div><div class="pin-label pin-label-above">IOREF</div></div>
+      <div class="pin-socket"><div class="pin-hole pin-hole-off"></div><div class="pin-label pin-label-above">RESET</div></div>
+      <div class="pin-socket"><div class="pin-hole pin-hole-pwm"></div><div class="pin-label pin-label-above">3.3V</div></div>
+      <div class="pin-socket"><div class="pin-hole pin-hole-high"></div><div class="pin-label pin-label-above">5V</div></div>
+      <div class="pin-socket"><div class="pin-hole pin-hole-off"></div><div class="pin-label pin-label-above">GND</div></div>
+      <div class="pin-socket"><div class="pin-hole pin-hole-off"></div><div class="pin-label pin-label-above">GND</div></div>
+      <div class="pin-socket"><div class="pin-hole pin-hole-off"></div><div class="pin-label pin-label-above">Vin</div></div>
+    </div>
+
+    <!-- Analog header (6 pins: A0–A5) -->
+    <div class="pin-header pin-header-analog">
+      <div class="pin-socket"><div class="pin-hole pin-hole-analog"></div><div class="pin-label pin-label-above">A0</div></div>
+      <div class="pin-socket"><div class="pin-hole pin-hole-off"></div><div class="pin-label pin-label-above">A1</div></div>
+      <div class="pin-socket"><div class="pin-hole pin-hole-off"></div><div class="pin-label pin-label-above">A2</div></div>
+      <div class="pin-socket"><div class="pin-hole pin-hole-off"></div><div class="pin-label pin-label-above">A3</div></div>
+      <div class="pin-socket"><div class="pin-hole pin-hole-off"></div><div class="pin-label pin-label-above">A4</div></div>
+      <div class="pin-socket"><div class="pin-hole pin-hole-off"></div><div class="pin-label pin-label-above">A5</div></div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>
